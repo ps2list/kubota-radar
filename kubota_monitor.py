@@ -6,10 +6,10 @@ import time
 import html
 from pathlib import Path
 from datetime import datetime, timezone
-from html.parser import HTMLParser
-from urllib.parse import urljoin, urlparse, quote_plus
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
+
 from telegram import send_message
 
 ROOT = Path(__file__).resolve().parent
@@ -21,38 +21,13 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(message)s"
 )
 
-UA = "Mozilla/5.0 (compatible; KubotaRadar/1.0)"
 SEARCH_ERRORS = []
-
-
-class Parser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.links = []
-        self.href = None
-        self.parts = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag == "a":
-            self.href = dict(attrs).get("href")
-            self.parts = []
-
-    def handle_data(self, data):
-        if self.href is not None:
-            self.parts.append(data)
-
-    def handle_endtag(self, tag):
-        if tag == "a" and self.href is not None:
-            title = " ".join(" ".join(self.parts).split())
-            self.links.append((self.href, title))
-            self.href = None
-            self.parts = []
 
 
 def norm(value):
     return re.sub(
         r"[^a-z0-9]+", " ",
-        html.unescape(value).lower()
+        html.unescape(str(value or "")).lower()
     ).strip()
 
 
@@ -68,86 +43,111 @@ def model_match(text):
     return None
 
 
-def search(site, term):
-    url = site["search_url"].format(
-        query=quote_plus(term)
+def get_listing_url(item):
+    for key in ("vipUrl", "itemUrl", "url", "link"):
+        value = item.get(key)
+        if isinstance(value, str) and value.startswith("http"):
+            return value.split("#")[0]
+
+    item_id = (
+        item.get("itemId")
+        or item.get("id")
+        or item.get("item_id")
+    )
+
+    if item_id:
+        return f"https://www.2dehands.be/v/{item_id}"
+
+    return None
+
+
+def search(term):
+    params = [
+        ("attributesByKey[]", "Language:nl-BE"),
+        ("attributesByKey[]", "Language:fr-BE"),
+        ("limit", "100"),
+        ("offset", "0"),
+        ("sortBy", "SORT_INDEX"),
+        ("sortOrder", "DECREASING"),
+        ("viewOptions", "list-view"),
+        ("searchInTitleAndDescription", "true"),
+        ("query", term)
+    ]
+
+    url = (
+        "https://www.2dehands.be/lrp/api/search?"
+        + urlencode(params)
+    )
+
+    request = Request(
+        url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/131.0.0.0 Safari/537.36"
+            ),
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "nl-BE,nl;q=0.9,fr-BE;q=0.8",
+            "Referer": "https://www.2dehands.be/"
+        }
     )
 
     try:
-        request = Request(
-            url,
-            headers={
-                "User-Agent": UA,
-                "Accept": "text/html",
-                "Accept-Language": "nl,en;q=0.8"
-            }
-        )
-
         with urlopen(
             request,
             timeout=config.get("request_timeout_seconds", 20)
         ) as response:
-            page = response.read().decode(
-                "utf-8", errors="replace"
+            data = json.loads(
+                response.read().decode("utf-8")
             )
 
+        listings = data.get("listings")
+
+        if not isinstance(listings, list):
+            raise ValueError(
+                "API-antwoord bevat geen geldige 'listings'-lijst"
+            )
+
+        results = []
+
+        for item in listings:
+            if not isinstance(item, dict):
+                continue
+
+            title = (
+                item.get("title")
+                or item.get("name")
+                or item.get("description")
+                or ""
+            )
+
+            description = item.get("description", "")
+            combined = f"{title} {description}"
+
+            model = model_match(combined)
+            if not model:
+                continue
+
+            listing_url = get_listing_url(item)
+            if not listing_url:
+                continue
+
+            results.append({
+                "id": listing_url,
+                "url": listing_url,
+                "title": str(title)[:250],
+                "site": "2dehands",
+                "model": model
+            })
+
+        return results
+
     except Exception as error:
-        message = f'{site["name"]} / "{term}": {error}'
+        message = f'2dehands / "{term}": {error}'
         SEARCH_ERRORS.append(message)
         LOG.warning("Zoekopdracht mislukt: %s", message)
         return []
-
-    parser = Parser()
-    parser.feed(page)
-
-    results = []
-    domain = urlparse(site["base_url"]).netloc
-
-    for href, title in parser.links:
-        if (
-            not href
-            or href.startswith(("#", "javascript:", "mailto:"))
-            or not title
-        ):
-            continue
-
-        full_url = urljoin(
-            site["base_url"], href
-        ).split("#")[0]
-
-        parsed = urlparse(full_url)
-
-        if (
-            parsed.netloc != domain
-            and not parsed.netloc.endswith("." + domain)
-        ):
-            continue
-
-        model = (
-            model_match(title)
-            or model_match(full_url.replace("-", " "))
-        )
-
-        if not model:
-            continue
-
-        if any(item["url"] == full_url for item in results):
-            continue
-
-        results.append({
-            "id": full_url,
-            "url": full_url,
-            "title": title[:250],
-            "site": site["name"],
-            "model": model
-        })
-
-        if len(results) >= config.get(
-            "max_results_per_search", 40
-        ):
-            break
-
-    return results
 
 
 def write_feed(items):
@@ -168,7 +168,6 @@ def write_feed(items):
 
     for item in items[:200]:
         node = ET.SubElement(channel, "item")
-
         ET.SubElement(node, "title").text = (
             f'[{item["model"]}] {item["title"]}'
         )
@@ -176,7 +175,6 @@ def write_feed(items):
         ET.SubElement(
             node, "guid", isPermaLink="true"
         ).text = item["id"]
-
         ET.SubElement(node, "description").text = (
             f'{item["site"]} — {item["model"]}'
         )
@@ -184,10 +182,7 @@ def write_feed(items):
 
     ET.indent(rss, space="  ")
 
-    feed_path = ROOT / config.get(
-        "feed_file", "feed.xml"
-    )
-
+    feed_path = ROOT / config.get("feed_file", "feed.xml")
     ET.ElementTree(rss).write(
         feed_path,
         encoding="utf-8",
@@ -196,47 +191,40 @@ def write_feed(items):
 
 
 def main():
-    seen_path = ROOT / config.get(
-        "seen_file", "seen.json"
-    )
+    seen_path = ROOT / config.get("seen_file", "seen.json")
 
     try:
         seen_data = json.loads(
             seen_path.read_text(encoding="utf-8")
         )
         seen = set(seen_data.get("seen", []))
-
     except FileNotFoundError:
         seen = set()
 
     found = []
+    terms = list(dict.fromkeys(
+        term
+        for model_terms in config["models"].values()
+        for term in model_terms
+    ))
 
-    for site in config["sites"]:
-        for terms in config["models"].values():
-            for term in terms:
-                found.extend(search(site, term))
+    for term in terms:
+        found.extend(search(term))
+        time.sleep(
+            config.get("delay_between_requests_seconds", 2)
+        )
 
-                time.sleep(
-                    config.get(
-                        "delay_between_requests_seconds", 2
-                    )
-                )
-
-    # Veiligheidscontrole: geen gegevens overschrijven
-    # wanneer één of meer zoekopdrachten mislukten.
     if SEARCH_ERRORS:
         summary = (
             f"{len(SEARCH_ERRORS)} zoekopdracht(en) mislukt. "
             "seen.json en feed.xml blijven ongewijzigd."
         )
-
         LOG.error(summary)
         raise RuntimeError(summary)
 
     deduplicated = {
         item["url"]: item for item in found
     }
-
     items = list(deduplicated.values())
 
     new_items = [
@@ -246,17 +234,15 @@ def main():
 
     if not seen:
         LOG.info(
-            "Initial run: %s links geregistreerd; "
+            "Eerste run: %d links geregistreerd; "
             "geen meldingen verzonden.",
             len(items)
         )
-
     else:
         for item in new_items:
             send_message(
-                "🔎 Nieuwe Kubota-advertentie\n"
+                "🔎 Nieuwe advertentie op 2dehands\n"
                 f'Model: {item["model"]}\n'
-                f'Site: {item["site"]}\n'
                 f'{item["title"]}\n'
                 f'{item["url"]}'
             )
