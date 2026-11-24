@@ -43,22 +43,20 @@ def model_match(text):
     return None
 
 
+
 def get_listing_url(item):
+    # Gebruik eerst de volledige URL die de API aanlevert
     for key in ("vipUrl", "itemUrl", "url", "link"):
         value = item.get(key)
-        if isinstance(value, str) and value.startswith("http"):
-            return value.split("#")[0]
 
-    item_id = (
-        item.get("itemId")
-        or item.get("id")
-        or item.get("item_id")
-    )
+        if isinstance(value, str) and value.startswith("https://www.2dehands.be/"):
+            if "/v/" in value and not value.rstrip("/").endswith("/v"):
+                return value.split("#")[0]
 
-    if item_id:
-        return f"https://www.2dehands.be/v/{item_id}"
-
+    # Geen volledige advertentielink gevonden:
+    # geen onvolledige link meer aanmaken.
     return None
+
 
 
 def search(term):
