@@ -1,3 +1,4 @@
+
 name: Kubota Radar
 
 'on':
@@ -7,6 +8,10 @@ name: Kubota Radar
 
 permissions:
   contents: write
+
+concurrency:
+  group: kubota-radar-main
+  cancel-in-progress: false
 
 jobs:
   monitor:
@@ -29,4 +34,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add seen.json feed.xml
           git diff --cached --quiet || git commit -m "Update Kubota Radar"
+          git pull --rebase origin main
           git push
