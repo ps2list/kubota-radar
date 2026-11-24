@@ -1,3 +1,4 @@
+
 {
   "models": {
     "Kubota U10-3": [
@@ -9,6 +10,142 @@
       "Kubota K008-3",
       "Kubota K008 3",
       "Kubota K008"
+    ],
+    "Yanmar SV08": [
+      "Yanmar SV08",
+      "Yanmar SV08-1",
+      "Yanmar SV08-1AS",
+      "Yanmar SV08-1C",
+      "Yanmar SV 08"
+    ],
+    "Yanmar SV05": [
+      "Yanmar SV05",
+      "Yanmar SV 05"
+    ],
+    "Yanmar SV10": [
+      "Yanmar SV10",
+      "Yanmar SV 10",
+      "Yanmar SV10-2"
+    ],
+    "Schaeff TC08": [
+      "Schaeff TC08",
+      "Terex TC08",
+      "TC 08"
+    ],
+    "Bobcat E08": [
+      "Bobcat E08",
+      "Bobcat E 08"
+    ],
+    "Bobcat E10": [
+      "Bobcat E10",
+      "Bobcat E10z",
+      "Bobcat E 10",
+      "Bobcat E 10z"
+    ],
+    "Hitachi ZX10U": [
+      "Hitachi ZX10U",
+      "Hitachi ZX10U-2",
+      "Hitachi ZX10U-3",
+      "Hitachi ZX10U-6",
+      "Hitachi ZX 10 U"
+    ],
+    "JCB 8008": [
+      "JCB 8008",
+      "JCB 8008 CTS"
+    ],
+    "JCB 8010": [
+      "JCB 8010",
+      "JCB 8010 CTS"
+    ],
+    "Takeuchi TB108": [
+      "Takeuchi TB108",
+      "Takeuchi TB 108"
+    ],
+    "Wacker Neuson 803": [
+      "Wacker Neuson 803",
+      "Wacker 803",
+      "Neuson 803"
+    ],
+    "Wacker Neuson ET08": [
+      "Wacker Neuson ET08",
+      "Wacker ET08",
+      "ET 08"
+    ],
+    "Wacker Neuson EZ10": [
+      "Wacker Neuson EZ10",
+      "Wacker EZ10",
+      "EZ 10"
+    ],
+    "Caterpillar 300.9D": [
+      "Caterpillar 300.9D",
+      "CAT 300.9D",
+      "Cat 300.9",
+      "Caterpillar 300.9"
+    ],
+    "Kobelco SK08": [
+      "Kobelco SK08",
+      "Kobelco SK 08"
+    ],
+    "Kobelco SK10SR": [
+      "Kobelco SK10SR",
+      "Kobelco SK 10 SR"
+    ],
+    "Kato HD09V5": [
+      "Kato HD09V5",
+      "Kato HD 09 V5"
+    ],
+    "Kato HD12VXE": [
+      "Kato HD12VXE",
+      "Kato HD 12 VXE"
+    ],
+    "IHI 9VX": [
+      "IHI 9VX",
+      "IHI 9 VX"
+    ],
+    "IHI 10VZ": [
+      "IHI 10VZ",
+      "IHI 10 VZ"
+    ],
+    "Komatsu PC09": [
+      "Komatsu PC09-1",
+      "Komatsu PC09",
+      "Komatsu PC 09"
+    ],
+    "Sunward SWE08": [
+      "Sunward SWE08",
+      "Sunward SWE 08"
+    ],
+    "Eurocomach ES10": [
+      "Eurocomach ES10 ZT",
+      "Eurocomach ES10",
+      "Eurocomach 10ZT"
+    ],
+    "Atlas AC08B": [
+      "Atlas AC08B",
+      "Atlas AC 08 B"
+    ],
+    "Rhino REX10": [
+      "Rhino REX10",
+      "Rhino REX 10"
+    ],
+    "Micrograver algemeen": [
+      "micrograver",
+      "micro graafmachine",
+      "micro excavator",
+      "micro digger",
+      "minigraver 800 kg",
+      "minigraver 900 kg",
+      "minigraver 1000 kg",
+      "minigraver 1100 kg",
+      "minigraver 1200 kg",
+      "mini pelle",
+      "minipelle",
+      "mini pelle 1 tonne",
+      "mini pelle 800 kg",
+      "mini pelle 1000 kg",
+      "mini pelle 1200 kg",
+      "compacte graafmachine",
+      "compact excavator"
     ]
   },
   "sites": [
@@ -26,8 +163,8 @@
   "request_timeout_seconds": 20,
   "delay_between_requests_seconds": 2,
   "max_results_per_search": 40,
-  "feed_title": "Kubota Radar - U10-3 en K008-3",
-  "feed_description": "Nieuwe Kubota advertenties",
+  "feed_title": "Micrograver Radar - tot 1.2 ton",
+  "feed_description": "Nieuwe advertenties voor micro- en minigravers tot ongeveer 1.2 ton",
   "feed_link": "https://github.com/ps2list/kubota-radar",
   "feed_file": "feed.xml",
   "seen_file": "seen.json"
