@@ -135,19 +135,19 @@ def search(term):
             model_matches += 1
             listing_url = get_listing_url(item)
 
-       if not listing_url:
-    missing_urls += 1
+            if not listing_url:
+                missing_urls += 1
 
-    if len(missing_url_examples) < 3:
-        missing_url_examples.append({
-            "title": str(title)[:120],
-            "vipUrl": repr(item.get("vipUrl")),
-            "vipUrl_type": type(item.get("vipUrl")).__name__,
-            "itemId": repr(item.get("itemId")),
-            "itemId_type": type(item.get("itemId")).__name__
-        })
+                if len(missing_url_examples) < 3:
+                    missing_url_examples.append({
+                        "title": str(title)[:120],
+                        "vipUrl": repr(item.get("vipUrl")),
+                        "vipUrl_type": type(item.get("vipUrl")).__name__,
+                        "itemId": repr(item.get("itemId")),
+                        "itemId_type": type(item.get("itemId")).__name__
+                    })
 
-    continue
+                continue
 
             results.append({
                 "id": listing_url,
@@ -166,8 +166,8 @@ def search(term):
 
         for example in missing_url_examples:
             LOG.warning(
-                'Modelmatch zonder advertentielink: titel=%r, API-velden=%s',
-                example["title"], example["fields"]
+                "Modelmatch zonder advertentielink: %s",
+                example
             )
 
         return results
