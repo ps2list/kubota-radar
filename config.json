@@ -153,11 +153,6 @@
       "name": "2dehands",
       "base_url": "https://www.2dehands.be",
       "search_url": "https://www.2dehands.be/q/{query}/"
-    },
-    {
-      "name": "Marktplaats",
-      "base_url": "https://www.marktplaats.nl",
-      "search_url": "https://www.marktplaats.nl/q/{query}/"
     }
   ],
   "request_timeout_seconds": 20,
