@@ -43,7 +43,6 @@ def model_match(text):
     return None
 
 
-
 def get_listing_url(item):
     # Gebruik eerst de volledige URL die de API aanlevert
     for key in ("vipUrl", "itemUrl", "url", "link"):
@@ -56,7 +55,6 @@ def get_listing_url(item):
     # Geen volledige advertentielink gevonden:
     # geen onvolledige link meer aanmaken.
     return None
-
 
 
 def search(term):
@@ -108,9 +106,15 @@ def search(term):
             )
 
         results = []
+        model_matches = 0
+        missing_urls = 0
+        invalid_items = 0
+        unmatched = 0
+        missing_url_examples = []
 
         for item in listings:
             if not isinstance(item, dict):
+                invalid_items += 1
                 continue
 
             title = (
@@ -125,10 +129,21 @@ def search(term):
 
             model = model_match(combined)
             if not model:
+                unmatched += 1
                 continue
 
+            model_matches += 1
             listing_url = get_listing_url(item)
+
             if not listing_url:
+                missing_urls += 1
+
+                if len(missing_url_examples) < 3:
+                    missing_url_examples.append({
+                        "title": str(title)[:120],
+                        "fields": sorted(item.keys())
+                    })
+
                 continue
 
             results.append({
@@ -138,6 +153,19 @@ def search(term):
                 "site": "2dehands",
                 "model": model
             })
+
+        LOG.info(
+            'Zoekterm "%s": API=%d, modelmatch=%d, zonder URL=%d, '
+            'geen modelmatch=%d, ongeldige items=%d, bruikbaar=%d',
+            term, len(listings), model_matches, missing_urls,
+            unmatched, invalid_items, len(results)
+        )
+
+        for example in missing_url_examples:
+            LOG.warning(
+                'Modelmatch zonder advertentielink: titel=%r, API-velden=%s',
+                example["title"], example["fields"]
+            )
 
         return results
 
