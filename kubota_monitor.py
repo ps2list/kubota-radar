@@ -135,16 +135,19 @@ def search(term):
             model_matches += 1
             listing_url = get_listing_url(item)
 
-            if not listing_url:
-                missing_urls += 1
+       if not listing_url:
+    missing_urls += 1
 
-                if len(missing_url_examples) < 3:
-                    missing_url_examples.append({
-                        "title": str(title)[:120],
-                        "fields": sorted(item.keys())
-                    })
+    if len(missing_url_examples) < 3:
+        missing_url_examples.append({
+            "title": str(title)[:120],
+            "vipUrl": repr(item.get("vipUrl")),
+            "vipUrl_type": type(item.get("vipUrl")).__name__,
+            "itemId": repr(item.get("itemId")),
+            "itemId_type": type(item.get("itemId")).__name__
+        })
 
-                continue
+    continue
 
             results.append({
                 "id": listing_url,
