@@ -28,6 +28,23 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Telegram verbinding testen
+        run: |
+          python - <<'PY'
+          import os, json, urllib.parse, urllib.request
+          token = os.environ["TELEGRAM_BOT_TOKEN"]
+          chat_id = os.environ["TELEGRAM_CHAT_ID"]
+          data = urllib.parse.urlencode({
+              "chat_id": chat_id,
+              "text": "✅ Kubota Radar: Telegram werkt!"
+          }).encode()
+          url = f"https://api.telegram.org/bot{token}/sendMessage"
+          req = urllib.request.Request(url, data=data)
+          with urllib.request.urlopen(req, timeout=20) as response:
+              result = json.loads(response.read())
+              print("Telegram OK:", result.get("ok"))
+          PY
+
       - name: Kubota advertenties controleren
         run: python kubota_monitor.py
 
